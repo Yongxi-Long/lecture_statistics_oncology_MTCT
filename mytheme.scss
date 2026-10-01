@@ -1,0 +1,143 @@
+/**
+ * A simple theme for reveal.js presentations, similar
+ * to the default theme. The accent color is brown.
+ *
+ * This theme is Copyright (C) 2012-2013 Owen Versteeg, http://owenversteeg.com - it is MIT licensed.
+ *
+ * Adapted for Quarto by Posit, PBC
+ * Copyright (C) 2024 Posit, PBC
+ */
+
+/*-- scss:defaults --*/
+
+// Override theme settings
+$font-family-sans-serif: "Palatino Linotype", "Book Antiqua", Palatino,
+  FreeSerif, serif !default;
+$body-color: #000 !default;
+$presentation-heading-font: $font-family-sans-serif !default;
+$presentation-heading-color: #4d79a6 !default;
+$presentation-heading-text-shadow: none !default;
+$presentation-heading-text-transform: none !default;
+$body-bg: #f0f1eb !default;
+$link-color:#b52a11 !default;
+$selection-bg: #26351c !default;
+
+$overlayElementBgColor: 0, 0, 0 !default;
+$overlayElementFgColor: 240, 240, 240 !default;
+
+// Change text colors against dark slide backgrounds
+$dark-bg-text-color: #fff !default;
+
+/*-- scss:rules --*/
+
+.reveal a {
+  line-height: 1.3em;
+}
+.title{
+  font-size: 90px !important;
+  color: #4d79a6 !important;
+}
+.subtitle
+{
+  font-size: 40px !important;
+  color: #4d79a6 !important;
+}
+.quarto-title-author-name{
+  font-size: 30px !important;
+  color: #496d87;
+}
+
+.date{
+  font-size: 30px !important;
+  color: #496d87;
+}
+#title-slide .quarto-title-affiliation {
+  font-size: 30px !important;
+  color: #496d87;
+}
+
+/* Slide titles (h1 and h2) */
+.reveal h1 {
+  color: #4d79a6;
+  font-size: 2.3em; /* Adjust as needed */
+  font-weight: bold;
+}
+
+.reveal h2 {
+  color: #084595;
+  font-size: 0.8em; /* Adjust as needed */
+  font-weight: bold;
+}
+
+.reveal h3 {
+  color: #4d78bc;
+  font-size: 0.7em; /* Adjust as needed */
+  font-weight: bold;
+}
+
+/* Space between slide title and content */
+.reveal h2, .reveal h3 {
+  margin-bottom: 0.8px;
+}
+
+
+/* Regular text on slides */
+.reveal p {
+  font-size: 0.7em; /* Adjust as needed */
+  margin-bottom: 0.5px; /* Adjust as needed */
+  line-height: 1.2; /* Increase for more spacing */
+}
+
+/* First-level bullet points */
+.reveal ul {
+  font-size: 0.7em; /* Adjust as needed */
+  margin-bottom: 1px; /* Adjust as needed */
+}
+
+/* Second-level (nested) bullet points */
+.reveal ul ul {
+  font-size: 0.9em; /* Slightly smaller for sub-points */
+  margin-bottom: 0.5px; /* Adjust as needed */
+}
+
+/* Make figure captions smaller */
+/*-- scss:rules --*/
+
+/* styles.scss */
+
+/* Strongly scoped to revealjs slides */
+.reveal .slides {
+
+  /* common figure/figure-like wrappers */
+  figure, .figure, .image {
+    /* target many possible caption elements */
+    figcaption,
+    .caption,
+    .figure-caption,
+    p.caption {
+      font-size: 0.85rem;     /* change this */
+      line-height: 1.1;
+      color: #666;
+      margin-top: 0.25em;
+      font-style: italic;
+    }
+
+    /* if Quarto puts captions as a <p> immediately after the <img> */
+    img + p.caption {
+      font-size: 0.85rem;
+    }
+  }
+}
+
+/* Fallback very specific selector with !important if theme overrides it */
+.reveal .slides figure figcaption,
+.reveal .slides figure .caption,
+.reveal .slides .figure .figure-caption,
+.reveal .slides img + p.caption {
+  font-size: 0.85rem !important;
+}
+
+/* Custom text color */
+.red-text {
+  color: #b52a11; 
+}
