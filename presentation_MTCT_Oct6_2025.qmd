@@ -124,23 +124,32 @@ The aim of Phase I trials is to recommend a dose for further investigation in Ph
 
 ## Phase I trial: Design (focus on MTD)
 
-### General scheme of a dose-finding design
+### Dose-finding: adjusting the dose as we learn
 
--   Specify a target DLT rate (the highest toxicity we accept)
--   Select a handful of dose levels (3-8, median 5) to be investigated
--   Start from the lowest dose which is almost certainly safe
--   Escalate to the next dose if current dose appears safe, De-escalation to lower dose if current dose appears toxic
+-   Set a target toxicity rate: for example, aim for a dose where about 25\% of patients experience a DLT
+-   Choose the doses to test: a small set of increasing dose levels
+-   Start cautiously: begin at a low dose expected to have an acceptable toxicity risk
+-   Learn from each group of patients: use the observed toxicities to decide whether to:
+    - Increase the dose
+    - Stay at the same dose
+    - Decrease the dose
+-   At the end: recommend a dose with an estimated toxicity rate close to the target
 
 ## Phase I trial: Design (focus on MTD)
 
-### 3+3 Design
+### 3+3 Design: simple rules, limited information usage
 
+-   Workflow: treat 3 patients at a dose the decide
+    -   0/3: DLT: increase the dose
+    -   1/3: treat 3 more at the current dose
+    -   2/3 or more: stop and the lower dose is the MTD
 -   Commonly used, easy implementation
 -   Drawback: statistically very inefficient
     -   Ignores dosage history other than previous cohort
-    -   No target DLT rate, tends to be conservative (20%-25% DLT)
+    
+------
 
-![*Source: http://onbiostatistics.blogspot.com/2015/01/phase-i-dose-escalation-study-design-3.html*](plots/threep3_design.png){fig-align="center" width="50%"}
+![*Source: http://onbiostatistics.blogspot.com/2015/01/phase-i-dose-escalation-study-design-3.html*](plots/threep3_design.png){fig-align="center" width="70%"}
 
 ## Phase I trial: Design (focus on MTD)
 
@@ -152,7 +161,9 @@ The aim of Phase I trials is to recommend a dose for further investigation in Ph
 -   Easy implementation: can be pre-tabulated!
     -   [Website](https://biostatistics.mdanderson.org/shinyapps/BOIN/) for BOIN design
 
-![*Source: https://biostatistics.mdanderson.org/shinyapps/BOIN/*](plots/BOIN_design2.png){fig-align="center" width="40%"}
+-----
+
+![*Source: https://biostatistics.mdanderson.org/shinyapps/BOIN/*](plots/BOIN_design2.png){fig-align="center" width="70%"}
 
 <!-- ## Phase I trial: Design (focus on MTD) -->
 
@@ -168,9 +179,16 @@ The aim of Phase I trials is to recommend a dose for further investigation in Ph
 
 ## Phase I trials: Sample size calculation
 
--   No explicit sample size calculation
--   Can pre-specify via simulations
--   Usually 20-40 patients to ensure decent model fit
+-   Usually no conventional power calculation
+    -   The aim is to select a dose, rather than test whether a treatment works
+-   Balance reliable dose selection with patient safety and feasibility
+    -   In current oncology trials commonly it is 20-40 patients
+-   Often use simulations to guide planning
+    -   Run many virtual trials with different sample sizes
+    -   Check:
+        -   How often do we select the dose closest to the target toxicity rate?
+        -   How many patients receive doses that are too toxic?
+
 
 ## Phase I trials: Analysis
 
@@ -194,13 +212,15 @@ Further confirm safety of the recommended dose
 
 Investigate efficacy
 
+-   Look for early evidence of benefit, such as tumour response
 -   Whether promising enough to initiate a large-scale Phase III investigation
 
 ## Phase II trials: Outcome
 
 ### Primary efficacy outcome
 
--   Objective tumor response (yes/no, binary) (Response Evaluation Criteria in Solid Tumors (RECIST))
+-   Objective tumor response (yes/no, binary) 
+    -   Response Evaluation Criteria in Solid Tumors (RECIST)
 -   For immuno-/targeted therapies, there's [findings](https://jamanetwork.com/journals/jamaoncology/fullarticle/2673078) that objective tumor response rate correlated poorly with overall survival
     -   Progression-free survival as a closer surrogate for overall survival
 
@@ -210,14 +230,15 @@ We'll focus on objective tumor response outcome in Phase II and discuss survival
 
 Single-arm trial is a common design in oncology
 
--   Rational
+-   Practical advantages
     -   Easier and faster to initiate than a randomized controlled trial
     -   Already lots of data on the performance of the standard of care
     -   Patients' unwillingness to be randomized to standard of care.
     -   [Single-arm clinical trials: design, ethics, principles](https://spcare.bmj.com/content/15/1/46)
 -   Caveat
-    -   Prone to bias without randomization (confounders, selection bias)
-    -   Not blinded
+    -   Patients in historical studies may differ in disease severity, previous treatment, or supportive care
+    -   Better outcomes could therefore reflect differences between patients or settings, rather than a treatment benefit
+    -   Usually open-label: knowing the treatment may influence care and outcome assessment
 
 ## Phase II trials: Sample size calculation
 
@@ -225,6 +246,8 @@ Single-arm trial is a common design in oncology
 
 -   We can be wrong about the conclusion
 -   Statistical procedures: we're not making mistakes too often (on average)
+    -   Not too many futile treatments approved: type I error control
+    -   Not missing promising treatments too often: more power
 
 ![](plots/two_errors.JPG){fig-align="center"}
 
