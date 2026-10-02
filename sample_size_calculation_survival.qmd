@@ -1,0 +1,158 @@
+---
+title: "Sample size calculation for survival outcomes"
+author: "Yongxi Long"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+## Aim
+
+Figure out how to better explain sample size calculation for survival outcomes
+
+[Online calculator](https://sample-size.net/sample-size-survival-analysis/)
+
+The reference is from [This paper](https://www.jstor.org/stable/2531021)
+
+## Two-step calculation
+
+### Determine the number of events needed
+
+"Since the usual tests of treatment effect, when covariates are adjusted for, are asymptotically equivalent, I shall derive a sample-size formula for the score test."
+
+Let:
+
+-   $\alpha,\beta$ be the type I error and type II error respectively
+-   $\Delta$ be the hazard ratio
+-   $P_0,P_1$ be the randomization ratio
+-   $ED$ be the expected number of deaths on the trial
+
+The score test statistic is asymptotically normal with unit variance and mean $log(\Delta)\sqrt{(P_0 P_1 ED)}$
+
+By solving $Power=P(S>z_{1-\alpha/2})+P(S<z_\alpha/2)=1-\beta$, we get:
+
+$ED = \frac{(z_{1-\alpha/2}+z_{1-\beta})^2}{P_0P_1log^2(\Delta)}$
+
+```{r,echo=FALSE}
+# function to calculate number of events needed
+events.needed <- function(alpha=0.05,beta=0.2,HR=0.8,P0=0.5,P1=0.5)
+{
+  (qnorm(1-alpha/2)+qnorm(1-beta))^2/(P0*P1*log(HR)^2)
+}
+```
+
+```{r}
+# set type I and type II error
+alpha <- 0.05; beta <- 0.2
+# give expected treatment effect in terms of hazard ratio
+HR <- 0.6
+# set the randomization ratio
+P0 <- 0.5
+P1 <- 1-P0
+# get the number of events needed
+events <- events.needed(alpha,beta,HR,P0,P1)
+events
+```
+
+### Determine the expected proportion of patients having the events
+
+-   We divided the whole study duration into two parts:
+
+    1.  an accrual period, a, the period during which patients enter the study
+
+    2.  and a follow-up period, f, the period from the end of accrual until the analysis of the data.
+
+    The range of follow-up time for patients is from f to f+a, assuming no loss-to-follow-up
+
+-   The approximate proportion of patients having the events depends on the survival curve, the length of the accrual time and the follow-up period
+
+```{r}
+# function to approximate prop of having the event from exponential survival
+# t is the median survival
+# a the accural period
+# f the follow-up period
+prop.event <- function(t,f,a)
+{
+  1-exp(-0.69*f/t)*(1-exp(-0.69*a/t))/(0.69*a/t)
+}
+```
+
+## Now we assume we have the total study duration fixed at 4 years
+
+Let's see the impact of the accrual period
+
+```{r}
+# set the hazard for group 0
+total.duration <- 4
+hazard0 <- 0.5
+median.surv0 <- log(2)/hazard0
+hazard1 <- hazard0*HR
+median.surv1 <- log(2)/hazard1
+```
+
+### If patients appear all at once at the beginning (a=0)
+
+```{r}
+# can't give a cuz the denominator would be zero
+a = 0.01 ;f=total.duration -a
+# proportion of patients having the event in group 0
+prop.event0 <- prop.event(t=median.surv0,f=f,a=a)
+# proportion of patients having the event in group 1
+prop.event1 <- prop.event(t=median.surv1,f=f,a=a)
+# proportion of patients having the event combined
+prop.event.comb <- P0*prop.event0+P1*prop.event1
+# total number of patients needed
+events/prop.event.comb
+```
+
+### If spend 1/4 of the time on recruiting
+
+This means the average follow-up time for all patients is a/2 + f = 3.5, assuming constant accrual rate
+
+```{r,echo=FALSE}
+# can't give a cuz the denominator would be zero
+a = 1 ;f=total.duration -a
+# proportion of patients having the event in group 0
+prop.event0 <- prop.event(t=median.surv0,f=f,a=a)
+# proportion of patients having the event in group 1
+prop.event1 <- prop.event(t=median.surv1,f=f,a=a)
+# proportion of patients having the event combined
+prop.event.comb <- P0*prop.event0+P1*prop.event1
+# total number of patients needed
+events/prop.event.comb
+```
+
+### If spend 1/2 of the time on recruiting
+
+This means the average follow-up time for all patients is a/2 + f = 3, assuming constant accrual rate
+
+```{r,echo=FALSE}
+# can't give a cuz the denominator would be zero
+a = 2 ;f=total.duration -a
+# proportion of patients having the event in group 0
+prop.event0 <- prop.event(t=median.surv0,f=f,a=a)
+# proportion of patients having the event in group 1
+prop.event1 <- prop.event(t=median.surv1,f=f,a=a)
+# proportion of patients having the event combined
+prop.event.comb <- P0*prop.event0+P1*prop.event1
+# total number of patients needed
+events/prop.event.comb
+```
+
+### If spend all of the time on recruiting
+
+This means the average follow-up time for all patients is a/2 + f = 2, assuming constant accrual rate
+
+```{r,echo=FALSE}
+# can't give a cuz the denominator would be zero
+a = 4 ;f=total.duration -a
+# proportion of patients having the event in group 0
+prop.event0 <- prop.event(t=median.surv0,f=f,a=a)
+# proportion of patients having the event in group 1
+prop.event1 <- prop.event(t=median.surv1,f=f,a=a)
+# proportion of patients having the event combined
+prop.event.comb <- P0*prop.event0+P1*prop.event1
+# total number of patients needed
+events/prop.event.comb
+```
