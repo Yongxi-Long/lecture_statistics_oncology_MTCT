@@ -25,6 +25,8 @@ suppressPackageStartupMessages(
   library(gridExtra)
   library(dplyr)
   library(knitr)
+  library(viridis)
+  library(ggsci)
   }
 )
 mycolors <- c("myred"="#f36569",
@@ -200,9 +202,9 @@ The aim of Phase I trials is to recommend a dose for further investigation in Ph
 
 -   [Example protocol template from clinicaltrials.gov](https://cdn.clinicaltrials.gov/documents/trainTrainer/Dose-Escalation-Design-Answer-Key.pdf?utm_source=chatgpt.com)
 -   [MD Anderson BOIN design website for protocol template of the BOIN design](https://biostatistics.mdanderson.org/shinyapps/BOIN/)
--   Designing Dose-Finding Phase I Clinical Trials: Top 10 Questions That Should Be Considered
+<!-- -   Designing Dose-Finding Phase I Clinical Trials: Top 10 Questions That Should Be Considered -->
 
-![](plots/ten_questions.png){fig-align="center" width="70%"}
+<!-- ![](plots/ten_questions.png){fig-align="center" width="70%"} -->
 
 ## Phase II trials: Aim
 
@@ -246,8 +248,6 @@ Single-arm trial is a common design in oncology
 
 -   We can be wrong about the conclusion
 -   Statistical procedures: we're not making mistakes too often (on average)
-    -   Not too many futile treatments approved: type I error control
-    -   Not missing promising treatments too often: more power
 
 ![](plots/two_errors.JPG){fig-align="center"}
 
@@ -257,8 +257,12 @@ Single-arm trial is a common design in oncology
 
 Sample size calculation is to balance type I error, power, and the size of the effect
 
--   Type I error: We do not want to investigate further if the treatment is not working (often we control Type I error at $5\%$)
--   Power: If the treatment really works, we want to have high chance of finding this out (often we target $80\%$ power)
+-   Type I error: pursuing a futile treatment
+    -   We do not want to investigate further if the treatment is not working 
+    -   Often we control this error rate at 5\%
+-   Power: Detecting a promising treatment
+    -   If the treatment really works, we want to have high chance of finding this out 
+    -   Often we target 80\% power
 -   Effect size: The effect you won't want to miss
     -   Minimum clinically meaningful effect
     -   Not the true effect because we don't know it before the study
@@ -277,9 +281,11 @@ Sample size calculation is to balance type I error, power, and the size of the e
 
 [Sample size calculator for binary outcomes](https://biostatistics.mdanderson.org/shinyapps/Nbinary/)
 
--   They actually did for one-sided test with significance level 5% instead of 2.5%
+-   They actually did for significance level 5\% instead of the intended 2.5\%
+    -   This less strict threshold (because we tolerate higher Type I error rate) resulted in a smaller required sample size
+    -   The correct calculation would require $31/0.8=39$ (20\% drop-out rate)
 
-![](plots/sample_size_binary_1sided.png){fig-align="center" width="90%"}
+![](plots/sample_size_binary_1sided.png){fig-align="center" width="70%"}
 
 ## Phase II trials: Sample size calculation
 
@@ -287,22 +293,16 @@ Sample size calculation is to balance type I error, power, and the size of the e
 
 -   A two-sided test looks for effects in both directions
     -   Puts half of the alpha for positive effect and the other half for negative effects
-    -   It is the same as a one-sided test with half of the type I error
--   If this sounds confusing -- Always do a two-sided test with $5\%$ type I error
+    -   It is the same as a one-sided test with half of the Type I error
+-   If this sounds confusing -- Always do a two-sided test with $5\%$ Type I error :)
 
-![](plots/sample_size_binary_2sided.png){fig-align="center" width="80%"}
+![](plots/sample_size_binary_2sided.png){fig-align="center" width="70%"}
 
 ## Phase II trials: Analysis
 
 ### Binary outcomes
 
--   Data is often summarized in a 2-by-2 table (randomized controlled design) or one response rate (single-arm design)
--   The null hypothesis of no treatment effect is often tested via
-    -   Chi-square test
--   The treatment effect is often quantified by
-    -   Response rate (single-arm design)
-    -   Risk ratio, odds ratio
-    -   Adjusted odds ratio (for baseline prognostic covariates) via logistic regression
+![](plots/Analysis_table_Ph2_binary.png){fig-align="center" width="90%"}
 
 ## Phase III trials: Aim & Design
 
@@ -326,9 +326,58 @@ Sample size calculation is to balance type I error, power, and the size of the e
 
 ### Hazard (rate)
 
--   Informally, how quickly patients experience the event of interest (death, relapse, clearance of lesion).
+-   Informally, how quickly patients experience the event of interest (death, relapse, clearance of lesion)
 
 ![](plots/hazard.png){fig-align="center" width="65%"}
+
+```{r,echo=FALSE,eval=FALSE}
+set.seed(123)
+# hazard of control
+lambdaA <- 2
+# hazard of treatment
+lambdaB <- 1
+lambdaC <- 0.5
+# administrative censoring 
+ac <- 1
+# sample size 100, equal randomization
+N <- 200
+# inverse of the cumulative density function of the exponential
+F.inv <- function(x,lambda)
+{
+  log(1-x)/(-lambda)
+}
+uuA <-  runif(n=N)
+failure.times.A <- F.inv(x=uuA,lambda = lambdaA)
+uuB <-  runif(n=N)
+failure.times.B <- F.inv(x=uuB,lambda = lambdaB)
+uuC <-  runif(n=N)
+failure.times.C <- F.inv(x=uuC,lambda = lambdaC)
+event.times <- c(failure.times.A,failure.times.B,failure.times.C)
+event.times[event.times>=ac] <- ac
+event <- rep(1,3*N)
+event[event.times>=ac] <- 0
+df <- data.frame(
+  id = 1:(3*N),
+  group = rep(c("A","B","C"),each=N),
+  time = event.times,
+  event = event
+)
+# plot KM curve
+fit<- survfit(Surv(time, event) ~ group, data = df)
+p <- ggsurvplot(fit, data = df,
+ legend.title = "Group",
+ legend.labs = c("A, Hazard = 2", "B, Hazard = 1","C, Hazard = 0.5"),
+ palette = viridisLite::viridis(3, end = 0.8),
+ pval = TRUE,
+ conf.int = TRUE,
+ # Add risk table
+ risk.table = TRUE,
+ tables.height = 0.2,
+ tables.theme = theme_cleantable(),
+ ggtheme = theme_bw())
+ggsave(file="plots/hazard.png",plot = p$plot,units = "in",
+       width=8,height = 6)
+```
 
 ```{r,echo=FALSE,eval=FALSE}
 #| fig-height: 5
@@ -360,64 +409,11 @@ lambdas <- c(0.5,1,2)
       )
 ```
 
-```{r}
-set.seed(123)
-# hazard of control
-lambdaA <- 2
-# hazard of treatment
-lambdaB <- 1
-lambdaC <- 0.5
-# administrative censoring
-ac <- 1
-# sample size 100, equal randomization
-N <- 200
-# inverse of the cumulative density function of the exponential
-F.inv <- function(x,lambda)
-{
-  log(1-x)/(-lambda)
-}
-uuA <-  runif(n=N)
-failure.times.A <- F.inv(x=uuA,lambda = lambdaA)
-uuB <-  runif(n=N)
-failure.times.B <- F.inv(x=uuB,lambda = lambdaB)
-uuC <-  runif(n=N)
-failure.times.C <- F.inv(x=uuC,lambda = lambdaC)
-event.times <- c(failure.times.A,failure.times.B,failure.times.C)
-event.times[event.times>=ac] <- ac
-event <- rep(1,3*N)
-event[event.times>=ac] <- 0
-df <- data.frame(
-  id = 1:(3*N),
-  group = rep(c("A","B","C"),each=N),
-  time = event.times,
-  event = event
-)
-# plot KM curve
-fit<- survfit(Surv(time, event) ~ group, data = df)
-p <- ggsurvplot(fit, data = df,
-#surv.median.line = "hv", # Add medians survival
- # Change legends: title & labels
- legend.title = "Group",
- legend.labs = c("A, Hazard = 2", "B, Hazard = 1","C, Hazard = 0.5"),
- # Add p-value and tervals
- pval = TRUE,
- conf.int = TRUE,
- # Add risk table
- risk.table = TRUE,
- tables.height = 0.2,
- tables.theme = theme_cleantable(),
- # Color palettes. Use custom color: c("#E7B800", "#2E9FDF"),
- # or brewer color (e.g.: "Dark2"), or ggsci color (e.g.: "jco")
- palette = c("#67a8cd","#6fb3a8","#ffc17f"),
- ggtheme = theme_bw())+
-  labs(x="Time")
-ggsave(file="plots/hazard.png",plot = p$plot,units = "in",
-       width=8,height = 6)
-```
+
 
 ## Phase III trials: A primer on survival analysis
 
-### Hazard ratio
+### Hazard ratio (HR)
 
 -   The ratio of two hazards between two groups
 -   Compares the "rate of per unit time" of having the event of interest that applies to every short time interval
@@ -425,11 +421,13 @@ ggsave(file="plots/hazard.png",plot = p$plot,units = "in",
 -   Hazard ratio is a relative measure rather than an absolute measure
     -   Group comparisons with the same hazard ratio can have very different survival curves
 
+
 ------------------------------------------------------------------------
 
-A hazard ratio of 0.5 of treatment vs. control, but both poor survival
+-   The treatment slows down disease progression by two folds (HR=0.5)
+    -   Patients treated could still very poor prognosis because the baseline hazard is high, e.g., pancreatic cancer
 
-![](plots/HR1.png){fig-align="center" width="80%"}
+![](plots/HR1.png){fig-align="center" width="70%"}
 
 ```{r,echo=FALSE,eval=FALSE}
 set.seed(123)
@@ -482,9 +480,10 @@ ggsave(file="plots/HR1.png",plot = p$plot,units = "in",
 
 ------------------------------------------------------------------------
 
-A hazard ratio of 0.5 of treatment vs. control, both good survival
+-   The treatment slows down disease progression by two folds (HR=0.5)
+    -   Patients w/w.o. treatment may still have similar mortality over time because the prognosis with standard-of-care is already quite good, e.g., prostate cancer
 
-![](plots/HR2.png){fig-align="center" width="80%"}
+![](plots/HR2.png){fig-align="center" width="70%"}
 
 ```{r,echo=FALSE,eval=FALSE}
 set.seed(123)
@@ -639,6 +638,7 @@ Sample size for time-to-event outcomes depends on
     1.  How much error we tolerate
 
     -   Type I error, Power
+    -   The higher error rates we tolerate, the fewer patients needed (but is it a good practice?)
 
 ------------------------------------------------------------------------
 
@@ -649,6 +649,7 @@ Sample size for time-to-event outcomes depends on
     2.  Effect size
 
     -   Improvement on median OS, Hazard ratio
+    -   Larger effect sizes are easier to detect, hence fewer patients needed
 
 ![*Source: American Society of Clinical Oncology Perspective: Raising the Bar for Clinical Trials by Defining Clinically Meaningful Outcomes*](plots/target_effect_size_survival.png){fig-align="center" width="110%"}
 
@@ -716,8 +717,10 @@ Sample size for time-to-event outcomes depends on
     -   log-rank test
 -   The treatment effect is often quantified by
     -   (Adjusted) hazard ratio (for baseline prognostic covariates) via Cox regression
+    
+## The END!
 
-## Phase III trials: Analysis
+## Relevant topics: More on censoring
 
 ### When the proportional hazard does not hold (?)
 
@@ -750,7 +753,7 @@ Sample size for time-to-event outcomes depends on
     -   Patients on the intervention arm can not tolerate the excess toxicity so they withdraw
     -   Censoring them is *Informative*, will bias the treatment effect (which direction?)
 
-![](plots/censoring_info.png){fig-align="center" width="55%"}
+![](plots/censoring_info.png){fig-align="center" width="50%"}
 
 ------------------------------------------------------------------------
 
@@ -764,7 +767,7 @@ Sample size for time-to-event outcomes depends on
 
 ### The fixed "alpha budget"
 
--   In clinical trials, we set a maximum tolerace of a false positive (Type I error), usually $5\%$ ($\alpha = 0.05$)
+-   In clinical trials, we set a maximum tolerace of a false positive (Type I error), usually 5\% ($\alpha = 0.05$)
 -   This is the "alpha budget."
 -   Usually is reserved for testing the main treatment effect on the primary endpoint.
 -   If we start testing multiple things with the same budget, the chance of at least one false positive increases, unless we control for it
@@ -776,7 +779,7 @@ Sample size for time-to-event outcomes depends on
 -   Perhaps you want to peek at your trial data before the planned sample size, to stop earlier for efficacy
 -   Every interim analysis consumes a bit of the alpha budget
 -   There are alpha spending functions (e.g., O'Brien-Fleming, Pocock rule) to help you design such interim analyses
-    -   At the end of the trial, you might not able to reject the null even if your p value is \< 0.05
+    -   At the end of the trial, you might not able to reject the null even if your p value is $< 0.05$
 
 ## Relevant topics: Multiple testing
 
@@ -801,7 +804,7 @@ Sample size for time-to-event outcomes depends on
     -   Null hypothesis: there is no treatment effect
 -   Non-inferiority trials aim to show that the new treatment is not unacceptably worse than the control by more than a pre-specified margin, $\delta$
     -   Null hypothesis: new treatment is worse than control by more than $\delta$
-    -   e.g., show that that an oral therapy is not more than $10\%$ worse than IV therapy in survival, but with fewer side effects.
+    -   e.g., show that that an oral therapy is not more than 10\% worse than IV therapy in survival, but with fewer side effects.
 -   Why non-inferiority trials?
     -   The new treatment might have some benefits other than efficacy
     -   Less toxic, cheaper, easier to comply
